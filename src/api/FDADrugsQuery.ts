@@ -1,3 +1,5 @@
+import { NDCEntrySearchFields } from './NDC.ts'
+
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 
 /*
@@ -13,23 +15,11 @@ export default class FDADrugsQuery {
     }
   }
 
-  /**
-   * Allows to append multiple field searches.
-   * */
-  appendSearch(search: Record<string, string>): void
-  /**
-   * Appends a single field search.
-   * */
-  appendSearch(search: string, value: string): void
-  appendSearch(search: string|Record<string, string>, value?: string) {
+  appendSearch(search: NDCEntrySearchFields) {
     const newParams = new URLSearchParams(this.params.toString())
-    if (typeof search === 'string') {
-      newParams.append('search', `${search}:${value}`)
-    } else {
       Object.entries(search).forEach(
         ([key, value]) => newParams.append('search', `${key}:${value}`)
       )
-    }
     return new FDADrugsQuery(newParams)
   }
 
