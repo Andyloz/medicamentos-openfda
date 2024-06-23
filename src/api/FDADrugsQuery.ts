@@ -15,11 +15,15 @@ export default class FDADrugsQuery {
     }
   }
 
-  appendSearch(search: NDCEntrySearchFields) {
+  appendSearch(search: NDCEntrySearchFields | string) {
     const newParams = new URLSearchParams(this.params.toString())
+    if (typeof search === 'string') {
+      newParams.append('search', search)
+    } else {
       Object.entries(search).forEach(
         ([key, value]) => newParams.append('search', `${key}:${value}`)
       )
+    }
     return new FDADrugsQuery(newParams)
   }
 
