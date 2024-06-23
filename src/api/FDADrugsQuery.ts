@@ -1,4 +1,4 @@
-import { NDCEntrySearchFields } from './NDC.ts'
+import { NDCEntry, NDCEntrySearchFields } from './NDC.ts'
 
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 
@@ -15,7 +15,7 @@ export default class FDADrugsQuery {
     }
   }
 
-  appendSearch(search: NDCEntrySearchFields | string) {
+  withSearch(search: NDCEntrySearchFields | string) {
     const newParams = new URLSearchParams(this.params.toString())
     if (typeof search === 'string') {
       newParams.append('search', search)
@@ -27,7 +27,7 @@ export default class FDADrugsQuery {
     return new FDADrugsQuery(newParams)
   }
 
-  limit(n: number = 1) {
+  withLimit(n: number = 1) {
     const newParams = new URLSearchParams(this.params.toString())
     newParams.set('limit', `${n}`)
     return new FDADrugsQuery(newParams)
@@ -35,5 +35,11 @@ export default class FDADrugsQuery {
 
   toString() {
     return `${DRUGS_URL}?${this.params.toString()}`
+  }
+
+  async request() {
+    const req = await fetch(this.toString())
+    const res = await req.json()
+    return res.results as NDCEntry[]
   }
 }
