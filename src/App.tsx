@@ -3,22 +3,19 @@ import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import FDADrugsQuery from './api/FDADrugsQuery.ts'
 import useAsyncEffect from 'use-async-effect'
-import { NDCEntry } from './api/NDC.ts'
 import Grid from '@mui/material/Unstable_Grid2'
 import hashIt from 'hash-it'
+import { FdaDrugEntry } from './api/FDADrugs.ts'
 
 function App() {
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebounce(search, 1000)
 
-  const [drugs, setDrugs] = useState<NDCEntry[]>([])
+  const [drugs, setDrugs] = useState<FdaDrugEntry[]>([])
 
   useAsyncEffect(async (isMounted) => {
     if (debouncedSearch === '') return
-    const results = await new FDADrugsQuery()
-      .withSearch(debouncedSearch)
-      .withLimit(5)
-      .request()
+    const results = await FDADrugsQuery.search(debouncedSearch)
     if (!isMounted()) return
     setDrugs(results)
   }, [debouncedSearch])

@@ -1,4 +1,4 @@
-import { NDCEntry, NDCEntrySearchFields } from './NDC.ts'
+import { FdaDrugEntry } from './FDADrugs.ts'
 
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 
@@ -8,29 +8,17 @@ const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 export default class FDADrugsQuery {
   readonly params: URLSearchParams
 
-  constructor(params = new URLSearchParams()) {
-    this.params = params
+  private constructor() {
+    this.params = new URLSearchParams()
     if (import.meta.env.API_KEY) {
       this.params.set('api_key', import.meta.env.API_KEY)
     }
   }
 
-  withSearch(search: NDCEntrySearchFields | string) {
-    const newParams = new URLSearchParams(this.params.toString())
-    if (typeof search === 'string') {
-      newParams.append('search', search)
-    } else {
-      Object.entries(search).forEach(
-        ([key, value]) => newParams.append('search', `${key}:${value}`)
-      )
-    }
-    return new FDADrugsQuery(newParams)
-  }
-
-  withLimit(n: number = 1) {
-    const newParams = new URLSearchParams(this.params.toString())
-    newParams.set('limit', `${n}`)
-    return new FDADrugsQuery(newParams)
+  static search(search: string) {
+    const query = new FDADrugsQuery()
+    query.params.append('search', search)
+    return query.request()
   }
 
   toString() {
@@ -40,6 +28,6 @@ export default class FDADrugsQuery {
   async request() {
     const req = await fetch(this.toString())
     const res = await req.json()
-    return res.results as NDCEntry[]
+    return res.results as FdaDrugEntry[]
   }
 }
