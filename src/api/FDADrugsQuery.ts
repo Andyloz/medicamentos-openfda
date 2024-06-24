@@ -10,8 +10,9 @@ export default class FDADrugsQuery {
 
   private constructor() {
     this.params = new URLSearchParams()
-    if (import.meta.env.API_KEY) {
-      this.params.set('api_key', import.meta.env.API_KEY)
+    console.log(import.meta.env)
+    if (import.meta.env.VITE_API_KEY) {
+      this.params.set('api_key', import.meta.env.VITE_API_KEY)
     }
   }
 
