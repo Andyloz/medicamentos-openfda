@@ -70,3 +70,10 @@ export interface ApplicationDoc {
 export interface SubmissionPropertyType {
   code: string
 }
+
+export interface FDAError {
+  error: {
+    code: string
+    message: string
+  }
+}

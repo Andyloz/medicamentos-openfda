@@ -1,4 +1,4 @@
-import { FdaDrugEntry } from './FDADrugs.ts'
+import { FdaDrugEntry, FDAError } from './FDADrugs.ts'
 
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 
@@ -10,7 +10,6 @@ export default class FDADrugsQuery {
 
   private constructor() {
     this.params = new URLSearchParams()
-    console.log(import.meta.env)
     if (import.meta.env.VITE_API_KEY) {
       this.params.set('api_key', import.meta.env.VITE_API_KEY)
     }
@@ -18,7 +17,8 @@ export default class FDADrugsQuery {
 
   static search(search: string) {
     const query = new FDADrugsQuery()
-    query.params.append('search', search)
+    query.params.append('search', `"${search}"`)
+    query.params.append('limit', '100')
     return query.request()
   }
 
@@ -29,6 +29,11 @@ export default class FDADrugsQuery {
   async request() {
     const req = await fetch(this.toString())
     const res = await req.json()
-    return res.results as FdaDrugEntry[]
+
+    if ('results' in res) {
+      return res.results as FdaDrugEntry[]
+    } else {
+      return res as FDAError
+    }
   }
 }
