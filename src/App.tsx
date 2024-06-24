@@ -13,14 +13,16 @@ function App() {
 
   const [drugs, setDrugs] = useState<FdaDrugEntry[]>([])
 
-  if (search === '' && drugs.length !== 0) {
+  if (search.length < 3 && drugs.length !== 0) {
     setDrugs([])
   }
 
   const [error, setError] = useState<string>()
 
+  console.log(drugs.reduce((accumulator, entry) => (entry.products?.length || 0) + accumulator, 0))
+
   useAsyncEffect(async (isMounted) => {
-    if (debouncedSearch === '') {
+    if (debouncedSearch.length < 3) {
       return
     }
     const results = await FDADrugsQuery.search(debouncedSearch)
@@ -58,6 +60,14 @@ function App() {
             sx={{ textAlign: 'center', color: 'text.secondary' }}
             children={error}
           />
+        }
+        {drugs.length > 0 &&
+          <Typography
+            variant='body2'
+            sx={{ textAlign: 'center', color: 'text.secondary' }}
+          >
+            Se han encontrado {drugs.length} resultados
+          </Typography>
         }
         {error === undefined &&
           <Grid container spacing={2}>
