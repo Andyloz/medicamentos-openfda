@@ -3,6 +3,8 @@ import { FdaDrugEntry, FDAError } from './FDADrugs.ts'
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 const QUERY_LIMIT = 50
 
+export type FDADrugsQueryResult = Awaited<ReturnType<typeof FDADrugsQuery.search>>
+
 /**
  * Used for ease a bit the building of queries
  * @see https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm Original searcher
@@ -90,8 +92,19 @@ export default class FDADrugsQuery {
   }
 
   async request() {
-    const req = await fetch(this.toString())
-    const res = await req.json()
+    let res
+
+    try {
+      const req = await fetch(this.toString())
+      res = await req.json()
+    } catch (e) {
+      return {
+        error: {
+          code: 'CUSTOM',
+          message: `No se ha podido conectar con el servidor (${(e as TypeError).message ?? undefined})`
+        }
+      } satisfies FDAError
+    }
 
     if ('results' in res) {
       return res.results as FdaDrugEntry[]
