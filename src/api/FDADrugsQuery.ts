@@ -42,16 +42,47 @@ export default class FDADrugsQuery {
     if ('error' in results) return results
 
     // having all brand_names, include in the search all drugs with the same brand_name
-    const brandNames = new Set()
+    const brandNames = new Set<string>()
     for (const entry of results) {
-      for (const product of entry.products || []) {
-        brandNames.add(product.brand_name)
+      for (const { brand_name } of entry.products || []) {
+        brandNames.add(brand_name)
       }
     }
     const queryStringIncludingRelated = queryString +
       ` products.brand_name:(${[...brandNames.values()].map(bn => `"${bn}"`).join(' OR ')})`
     query.params.set('search', queryStringIncludingRelated)
-    return query.request()
+    const finalResults = await query.request()
+    if ('error' in finalResults) return finalResults
+
+    // group every occurrence by its products brand names
+    const groupedResults: Record<string, FdaDrugEntry[]> = {}
+    for (const brandName of brandNames.values()) {
+      groupedResults[brandName] = [] // init
+    }
+    /**
+     * Some applications (entries in the jargon of this app) **could include products with different brand names** as
+     * the ones matching in the first search. These are not included as new keys at `groupedResults` nor shown in the
+     * search results (case found at ANDA076447).
+     * For the same reason, the same application **could be included into multiple groups** if it has products with
+     * similar brand names that fits together within the first search criteria (case found searching
+     * 'BUTALBITAL ACETAMINOPHEN CAFFEINE CODEINE', ANDA076528).
+     * */
+    for (const entry of finalResults) {
+      let products = entry.products ?? undefined
+      if (typeof products === 'undefined') {
+        continue
+      }
+
+      let entryBrandNames = products.map(prod => prod.brand_name)
+      entryBrandNames = [...new Set(entryBrandNames)] // remove duplicates
+      const filteredBrandNames = entryBrandNames.filter(bn => brandNames.has(bn)) // filter out-of-search brand names
+
+      for (const brandName of filteredBrandNames) {
+        groupedResults[brandName].push(entry)
+      }
+    }
+
+    return groupedResults
   }
 
   toString() {
