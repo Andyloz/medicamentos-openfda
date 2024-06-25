@@ -5,6 +5,7 @@ const QUERY_LIMIT = 50
 
 /**
  * Used for ease a bit the building of queries
+ * @see https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm Original searcher
  * */
 export default class FDADrugsQuery {
   readonly params: URLSearchParams
@@ -26,12 +27,30 @@ export default class FDADrugsQuery {
    * {@link https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=faq.page#howsearch explanation of how the
    * search works}
    * */
-  static search(search: string) {
+  static async search(search: string) {
     const query = new FDADrugsQuery()
+    // todo allow for code search
+    const searchWords = search.split(' ')
+
+    // search brand_name or active_ingredients, both including all words
     const queryString =
-      `products.brand_name:(${search.split(' ').join(' AND ')}) ` +
-      `products.active_ingredients.name:(${search.split(' ').join(' AND ')})`
-    query.params.append('search', queryString)
+      `products.brand_name:(${searchWords.join(' AND ')}) ` +
+      `products.active_ingredients.name:(${searchWords.join(' AND ')})`
+    query.params.set('search', queryString)
+
+    const results = await query.request()
+    if ('error' in results) return results
+
+    // having all brand_names, include in the search all drugs with the same brand_name
+    const brandNames = new Set()
+    for (const entry of results) {
+      for (const product of entry.products || []) {
+        brandNames.add(product.brand_name)
+      }
+    }
+    const queryStringIncludingRelated = queryString +
+      ` products.brand_name:(${[...brandNames.values()].map(bn => `"${bn}"`).join(' OR ')})`
+    query.params.set('search', queryStringIncludingRelated)
     return query.request()
   }
 
