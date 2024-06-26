@@ -5,7 +5,7 @@ export const indexLoader = (async ({ request }) => {
 
   const url = new URL(request.url)
   const q = url.searchParams.get('q')
-  const page = url.searchParams.get('page') ?? 0 as const
+  const page = url.searchParams.get('page') ?? 1 as const
 
   if (typeof q === 'object' || q.length < 3) {
     return { status: 'no-search' as const }
