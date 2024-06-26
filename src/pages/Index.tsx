@@ -1,5 +1,5 @@
-import { Box, Container, Pagination, TextField, Typography } from '@mui/material'
-import { Form, useLoaderData, useSearchParams, useSubmit } from 'react-router-dom'
+import { Box, Container, Pagination, Snackbar, TextField, Typography } from '@mui/material'
+import { Form, useLoaderData, useNavigation, useSearchParams, useSubmit } from 'react-router-dom'
 import { IndexLoader } from '../loaders.ts'
 import { useDebouncedCallback } from 'use-debounce'
 import { ChangeEvent } from 'react'
@@ -7,9 +7,10 @@ import DrugsList from '../components/drugs-list/DrugsList.tsx'
 
 function Index() {
 
+  const [searchParams, setSearchParams] = useSearchParams()
   const data = useLoaderData() as IndexLoader
   const submit = useSubmit()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigation = useNavigation()
 
   const changeHandler = useDebouncedCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +42,13 @@ function Index() {
             defaultValue={searchParams.get('q')}
           />
         </Form>
+
+        {/* loading */}
+        <Snackbar
+          open={navigation.state === 'loading'}
+          message="Cargando..."
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        />
 
         {/* message */}
         <Typography
