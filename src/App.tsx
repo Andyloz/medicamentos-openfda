@@ -1,46 +1,50 @@
 import { Box, Card, CardContent, Container, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import FDADrugsQuery from './api/FDADrugsQuery.ts'
+import FDADrugsQuery, { FDADrugsQueryResult } from './api/FDADrugsQuery.ts'
 import useAsyncEffect from 'use-async-effect'
 import Grid from '@mui/material/Unstable_Grid2'
 import hashIt from 'hash-it'
-import { FdaDrugEntry } from './api/FDADrugs.ts'
+
+export type DrugSearchEntries = ReturnType<typeof Object.entries<FDADrugsQueryResult>>
 
 function App() {
+  // todo move search state to the url
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebounce(search, 500)
 
-  const [drugs, setDrugs] = useState<FdaDrugEntry[]>([])
+  const [drugEntries, setDrugEntries] = useState<DrugSearchEntries>([])
 
-  if (search.length < 3 && drugs.length !== 0) {
-    setDrugs([])
+  if (search.length < 3 && drugEntries.length !== 0) {
+    setDrugEntries([])
   }
 
   const [error, setError] = useState<string>()
-
-  console.log(drugs.reduce((accumulator, entry) => (entry.products?.length || 0) + accumulator, 0))
+  // @ts-ignore todo loading animation
+  const [loading, setLoading] = useState(false)
 
   useAsyncEffect(async (isMounted) => {
     if (debouncedSearch.length < 3) {
       return
     }
+    setLoading(true)
     const results = await FDADrugsQuery.search(debouncedSearch)
     if (!isMounted()) {
       return
     }
 
-    if ('error' in results) {
+    if ('error' in results && 'code' in results.error) {
+      setDrugEntries([])
       if (results.error.code === 'NOT_FOUND') {
-        setDrugs([])
         setError('No se encontraron medicamentos que coincidan')
       } else {
         setError(results.error.message)
       }
     } else {
       setError(undefined)
-      setDrugs(results)
+      setDrugEntries(Object.entries(results))
     }
+    setLoading(false)
   }, [debouncedSearch])
 
 
@@ -48,12 +52,26 @@ function App() {
     <Container maxWidth='sm'>
       <h1>Medicamentos FDA</h1>
       <Box sx={{ my: 4 }}>
+
+        {/* search bar */}
         <TextField
           label='Escribe para buscar...'
           variant='outlined'
-          sx={{ width: '100%', mb: 4 }}
+          sx={{ width: '100%', mb: 2 }}
           value={search} onChange={(e) => setSearch(e.target.value)}
         />
+
+        {/* results count */}
+        {drugEntries.length > 0 &&
+          <Typography
+            variant='body2'
+            sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}
+          >
+            Se han encontrado {drugEntries.length} resultados
+          </Typography>
+        }
+
+        {/* results display */}
         {error !== undefined &&
           <Typography
             variant='body2'
@@ -61,17 +79,9 @@ function App() {
             children={error}
           />
         }
-        {drugs.length > 0 &&
-          <Typography
-            variant='body2'
-            sx={{ textAlign: 'center', color: 'text.secondary' }}
-          >
-            Se han encontrado {drugs.length} resultados
-          </Typography>
-        }
         {error === undefined &&
           <Grid container spacing={2}>
-            {drugs.map(drug =>
+            {drugEntries.map(drug =>
               <Grid key={hashIt(drug)} xs={12}>
                 <Card variant='outlined'>
                   <CardContent>
@@ -84,6 +94,7 @@ function App() {
             )}
           </Grid>
         }
+
       </Box>
     </Container>
   )
