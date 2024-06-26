@@ -1,19 +1,10 @@
 import { useState } from 'react'
 import Grid from '@mui/material/Unstable_Grid2'
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Collapse,
-  IconButton,
-  IconButtonProps,
-  styled,
-  Typography
-} from '@mui/material'
+import { Box, Card, CardHeader, Collapse, IconButton, IconButtonProps, styled, Typography } from '@mui/material'
 import { cyan, indigo } from '@mui/material/colors'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { FDAApplication, Product } from '../../api/FDADrugs.ts'
+import ProductCardContent from './ProductCardContent.tsx'
 
 export interface ProductCardProps {
   application: FDAApplication
@@ -64,11 +55,7 @@ export default function ProductCard({ application, product }: ProductCardProps) 
           }
         />
         <Collapse in={expanded} timeout='auto' unmountOnExit sx={{ fontSize: 8 }}>
-          <CardContent>
-          <pre>
-            {JSON.stringify(product, null, 2)}
-          </pre>
-          </CardContent>
+          <ProductCardContent application={application} product={product} />
         </Collapse>
       </Card>
     </Grid>
