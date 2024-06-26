@@ -3,7 +3,7 @@ import { Form, useLoaderData, useSearchParams, useSubmit } from 'react-router-do
 import { IndexLoader } from '../loaders.ts'
 import { useDebouncedCallback } from 'use-debounce'
 import { ChangeEvent } from 'react'
-import DrugsList from '../components/DrugsList.tsx'
+import DrugsList from '../components/drugs-list/DrugsList.tsx'
 
 function Index() {
 

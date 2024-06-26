@@ -11,7 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import { useState } from 'react'
-import { FDAApplication, Product } from '../api/FDADrugs.ts'
+import { FDAApplication, Product } from '../../api/FDADrugs.ts'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { cyan, indigo } from '@mui/material/colors'
 
