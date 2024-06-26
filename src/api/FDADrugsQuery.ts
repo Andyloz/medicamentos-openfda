@@ -43,17 +43,17 @@ export default class FDADrugsQuery {
       `products.active_ingredients.name:(${searchWords.join(' AND ')})`
     query.params.set('search', queryString)
 
-    const results = await query.request()
-    if ('error' in results) {
+    const firstResults = await query.request()
+    if ('error' in firstResults) {
       return {
         status: 'error' as const,
-        ...results
+        ...firstResults
       }
     }
 
     // having all brand_names, include in the search all drugs with the same brand_name
     const brandNames = new Set<string>()
-    for (const entry of results) {
+    for (const entry of firstResults) {
       for (const { brand_name } of entry.products || []) {
         brandNames.add(brand_name)
       }
@@ -63,11 +63,11 @@ export default class FDADrugsQuery {
         .replace(';', '') // todo figure why ';' gives bad request
     console.log(queryStringIncludingRelated)
     query.params.set('search', queryStringIncludingRelated)
-    const finalResults = await query.request()
-    if ('error' in finalResults) {
+    const completeResults = await query.request()
+    if ('error' in completeResults) {
       return {
         status: 'error' as const,
-        ...finalResults
+        ...completeResults
       }
     }
 
@@ -84,7 +84,7 @@ export default class FDADrugsQuery {
      * similar brand names that fits together within the first search criteria (case found searching
      * 'BUTALBITAL ACETAMINOPHEN CAFFEINE CODEINE', ANDA076528).
      * */
-    for (const entry of finalResults) {
+    for (const entry of completeResults) {
       let products = entry.products ?? undefined
       if (typeof products === 'undefined') {
         continue
