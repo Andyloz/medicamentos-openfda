@@ -20,11 +20,7 @@ export const indexLoader = (async ({ request }) => {
         : results.error.message
     }
   }
-  return {
-    status: 'ok' as const,
-    drugs: results
-  }
-
+  return results
 }) satisfies LoaderFunction
 
 export type IndexLoader = Awaited<ReturnType<typeof indexLoader>>
