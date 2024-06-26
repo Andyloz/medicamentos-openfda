@@ -5,11 +5,14 @@ const QUERY_LIMIT = 50
 
 export type FDADrugsQueryResult = Awaited<ReturnType<typeof FDADrugsQuery.search>>
 
+export type FDAGroupedEntries = { [brandName: string]: FdaDrugEntry[] }
+
 /**
  * Used for ease a bit the building of queries
  * @see https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm Original searcher
  * */
 export default class FDADrugsQuery {
+
   readonly params: URLSearchParams
 
   /**
@@ -41,7 +44,12 @@ export default class FDADrugsQuery {
     query.params.set('search', queryString)
 
     const results = await query.request()
-    if ('error' in results) return results
+    if ('error' in results) {
+      return {
+        status: 'error' as const,
+        ...results
+      }
+    }
 
     // having all brand_names, include in the search all drugs with the same brand_name
     const brandNames = new Set<string>()
@@ -52,12 +60,19 @@ export default class FDADrugsQuery {
     }
     const queryStringIncludingRelated = queryString +
       ` products.brand_name:(${[...brandNames.values()].map(bn => `"${bn}"`).join(' OR ')})`
+        .replace(';', '') // todo figure why ';' gives bad request
+    console.log(queryStringIncludingRelated)
     query.params.set('search', queryStringIncludingRelated)
     const finalResults = await query.request()
-    if ('error' in finalResults) return finalResults
+    if ('error' in finalResults) {
+      return {
+        status: 'error' as const,
+        ...finalResults
+      }
+    }
 
     // group every occurrence by its products brand names
-    const groupedResults: { [brandName: string]: FdaDrugEntry[] } = {}
+    const groupedResults: FDAGroupedEntries = {}
     for (const brandName of brandNames.values()) {
       groupedResults[brandName] = [] // init
     }
@@ -84,7 +99,10 @@ export default class FDADrugsQuery {
       }
     }
 
-    return groupedResults
+    return {
+      status: 'ok' as const,
+      drugs: groupedResults
+    }
   }
 
   toString() {
@@ -112,4 +130,5 @@ export default class FDADrugsQuery {
       return res as FDAError
     }
   }
+
 }
