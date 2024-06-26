@@ -57,7 +57,7 @@ export default class FDADrugsQuery {
     if ('error' in finalResults) return finalResults
 
     // group every occurrence by its products brand names
-    const groupedResults: Record<string, FdaDrugEntry[]> = {}
+    const groupedResults: { [brandName: string]: FdaDrugEntry[] } = {}
     for (const brandName of brandNames.values()) {
       groupedResults[brandName] = [] // init
     }

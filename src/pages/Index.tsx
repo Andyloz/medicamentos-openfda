@@ -1,52 +1,22 @@
-import { Box, Card, CardContent, Container, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
-import { useDebounce } from 'use-debounce'
-import FDADrugsQuery, { FDADrugsQueryResult } from '../api/FDADrugsQuery.ts'
-import useAsyncEffect from 'use-async-effect'
+import { Box, Container, TextField } from '@mui/material'
 import Grid from '@mui/material/Unstable_Grid2'
 import hashIt from 'hash-it'
-
-export type DrugSearchEntries = ReturnType<typeof Object.entries<FDADrugsQueryResult>>
+import { Form, useLoaderData, useSubmit } from 'react-router-dom'
+import { IndexLoader } from '../loaders.ts'
+import { useDebouncedCallback } from 'use-debounce'
+import { ChangeEvent } from 'react'
 
 function Index() {
-  // todo move search state to the url
-  const [search, setSearch] = useState('')
-  const [debouncedSearch] = useDebounce(search, 500)
 
-  const [drugEntries, setDrugEntries] = useState<DrugSearchEntries>([])
+  const data = useLoaderData() as IndexLoader
+  const submit = useSubmit()
 
-  if (search.length < 3 && drugEntries.length !== 0) {
-    setDrugEntries([])
-  }
-
-  const [error, setError] = useState<string>()
-  // @ts-ignore todo loading animation
-  const [loading, setLoading] = useState(false)
-
-  useAsyncEffect(async (isMounted) => {
-    if (debouncedSearch.length < 3) {
-      return
-    }
-    setLoading(true)
-    const results = await FDADrugsQuery.search(debouncedSearch)
-    if (!isMounted()) {
-      return
-    }
-
-    if ('error' in results && 'code' in results.error) {
-      setDrugEntries([])
-      if (results.error.code === 'NOT_FOUND') {
-        setError('No se encontraron medicamentos que coincidan')
-      } else {
-        setError(results.error.message)
-      }
-    } else {
-      setError(undefined)
-      setDrugEntries(Object.entries(results))
-    }
-    setLoading(false)
-  }, [debouncedSearch])
-
+  const changeHandler = useDebouncedCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      submit(e.target.form)
+    },
+    300
+  )
 
   return (
     <Container maxWidth='sm'>
@@ -54,20 +24,30 @@ function Index() {
       <Box sx={{ my: 4 }}>
 
         {/* search bar */}
-        <TextField
-          label='Escribe para buscar...'
-          variant='outlined'
-          sx={{ width: '100%', mb: 2 }}
-          value={search} onChange={(e) => setSearch(e.target.value)}
-        />
+        <Form
+          id='search-form' role='search'
+          onChange={(e) => changeHandler(e as unknown as ChangeEvent<HTMLInputElement>)}
+          onSubmit={(e) => e.preventDefault() /* prevents Enter key from submitting */}
+        >
+          <TextField
+            label='Escribe para buscar...'
+            variant='outlined'
+            sx={{ width: '100%', mb: 2 }}
+            //
+            id='q'
+            aria-label='Buscar medicamentos'
+            type='search'
+            name='q'
+          />
+        </Form>
 
         {/* results count */}
-        {drugEntries.length > 0 &&
+        {'drugs' in data &&
           <Typography
             variant='body2'
             sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}
           >
-            Se han encontrado {drugEntries.length} resultados
+            Se han encontrado {data.drugs.length} resultados
           </Typography>
         }
 
@@ -98,6 +78,7 @@ function Index() {
       </Box>
     </Container>
   )
+
 }
 
 export default Index
