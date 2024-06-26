@@ -1,9 +1,19 @@
 import Grid from '@mui/material/Unstable_Grid2'
-import { Card, CardContent, CardHeader, Collapse, IconButton, IconButtonProps, styled, Typography } from '@mui/material'
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Collapse,
+  IconButton,
+  IconButtonProps,
+  styled,
+  Typography
+} from '@mui/material'
 import { useState } from 'react'
 import { FDAApplication, Product } from '../api/FDADrugs.ts'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { grey } from '@mui/material/colors'
+import { cyan, indigo } from '@mui/material/colors'
 
 export interface DrugsListProps {
   applications: FDAApplication[]
@@ -36,21 +46,29 @@ function ProductCard({ application, product }: ProductCardProps) {
   return (
     <Grid xs={12}>
       <Card variant='outlined'>
-        <CardHeader
+        <MyCardHeader
           sx={{
-            backgroundColor: grey[50], marginBottom: '-1px',
-            borderColor: 'divider', borderWidth: '0 0 1px 0', borderStyle: 'solid'
+            backgroundColor: cyan['A200'], marginBottom: '-1px',
+            borderColor: 'divider', borderWidth: '0 0 1px 0', borderStyle: 'solid',
           }}
           title={
             <>
-              <Typography sx={{ fontWeight: 'bold' }}>
-                {product.brand_name}
+              <Box
+                sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}
+              >
+                <Typography
+                  children={product.brand_name}
+                  component='span'
+                  sx={{
+                    fontWeight: 'bold', color: indigo['500'],
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden'
+                  }}
+                />
                 <Typography
                   children={`#${application.application_number}`}
                   component='span'
-                  sx={{ color: 'text.disabled' }}
                 />
-              </Typography>
+              </Box>
             </>
           }
           action={
@@ -75,6 +93,12 @@ function ProductCard({ application, product }: ProductCardProps) {
     </Grid>
   )
 }
+
+const MyCardHeader = styled(CardHeader)`
+  & .MuiCardHeader-content {
+    min-width: 0;
+  }
+`
 
 /**
  * ExpandMoreProps
