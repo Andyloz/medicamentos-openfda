@@ -35,7 +35,8 @@ export default class FDADrugsQuery {
   static async search(search: string) {
     const query = new FDADrugsQuery()
     // todo allow for code search
-    const searchWords = search.split(' ')
+    // todo add sorting
+    const searchWords = search.split(' ').map(encodeURIComponent)
 
     // search brand_name or active_ingredients, both including all words
     const queryString =
@@ -60,7 +61,6 @@ export default class FDADrugsQuery {
     }
     const queryStringIncludingRelated = queryString +
       ` products.brand_name:(${[...brandNames.values()].map(bn => `"${bn}"`).join(' OR ')})`
-        .replace(';', '') // todo figure why ';' gives bad request
     console.log(queryStringIncludingRelated)
     query.params.set('search', queryStringIncludingRelated)
     const completeResults = await query.request()
