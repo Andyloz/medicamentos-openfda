@@ -1,4 +1,4 @@
-import { Box, Container, TextField, Typography } from '@mui/material'
+import { Box, Container, Pagination, TextField, Typography } from '@mui/material'
 import { Form, useLoaderData, useSearchParams, useSubmit } from 'react-router-dom'
 import { IndexLoader } from '../loaders.ts'
 import { useDebouncedCallback } from 'use-debounce'
@@ -9,7 +9,7 @@ function Index() {
 
   const data = useLoaderData() as IndexLoader
   const submit = useSubmit()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const changeHandler = useDebouncedCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -53,6 +53,25 @@ function Index() {
 
         {/* results display */}
         {data.status === 'ok' && <DrugsList applications={data.results} />}
+
+        {/* pagination */}
+        {data.status === 'ok' &&
+          <Box sx={{ display: 'flex' }}>
+            <Pagination
+              variant='outlined'
+              color='primary'
+              sx={{ mt: 4, mx: 'auto' }}
+              count={data.pagination.totalPages}
+              page={data.pagination.currentPage}
+              onChange={(_, page) => {
+                setSearchParams((prev) => {
+                  prev.set('page', `${page}`)
+                  return prev
+                })
+              }}
+            />
+          </Box>
+        }
 
       </Box>
     </Container>
