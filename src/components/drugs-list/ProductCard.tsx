@@ -38,6 +38,7 @@ export default function ProductCard({ application, product }: ProductCardProps) 
               >
                 <Typography
                   children={product.brand_name}
+                  title={product.brand_name}
                   component='span'
                   sx={{
                     fontWeight: 'bold', color: indigo['500'],
