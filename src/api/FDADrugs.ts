@@ -1,5 +1,27 @@
 // noinspection SpellCheckingInspection
 
+export interface FDADrugsResponse {
+  meta: {
+    disclaimer: string
+    terms: string
+    license: string
+    last_updated: string
+    results: {
+      "skip": number
+      "limit": number
+      "total": number
+    }
+  }
+  results: FDAApplication[]
+}
+
+export interface FDAErrorResponse {
+  error: {
+    code: string
+    message: string
+  }
+}
+
 export interface FDAApplication {
   submissions?: Submission[]
   application_number: string
@@ -69,11 +91,4 @@ export interface ApplicationDoc {
 
 export interface SubmissionPropertyType {
   code: string
-}
-
-export interface FDAError {
-  error: {
-    code: string
-    message: string
-  }
 }

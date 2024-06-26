@@ -47,13 +47,12 @@ function Index() {
           variant='body2'
           sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}
         >
-          {/* todo update to a not limited counter */}
-          {data.status === 'ok' && <>Se han encontrado {Object.entries(data.drugs).length} resultados</>}
+          {data.status === 'ok' && <>Se han encontrado {data.meta.results.total} resultados</>}
           {data.status === 'error' && <>{data.message}</>}
         </Typography>
 
         {/* results display */}
-        {data.status === 'ok' && <DrugsList applications={data.drugs} />}
+        {data.status === 'ok' && <DrugsList applications={data.results} />}
 
       </Box>
     </Container>

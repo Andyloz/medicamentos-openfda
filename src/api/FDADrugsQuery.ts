@@ -1,4 +1,4 @@
-import { FDAApplication, FDAError } from './FDADrugs.ts'
+import { FDADrugsResponse, FDAErrorResponse } from './FDADrugs.ts'
 
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 const QUERY_LIMIT = 50
@@ -27,12 +27,14 @@ export default class FDADrugsQuery {
    * See {@link https://open.fda.gov/apis/query-syntax/ query syntax} and
    * {@link https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=faq.page#howsearch explanation of how the
    * search works}
-   * Grouping the applications by brand_name is not possible due to limitations in the API: 'sorting allowed by
-   * non-analyzed fields only'.
+   * Grouping the applications by brand_name is not possible due to limitations in the API, so it's not possible to
+   * fully mimic the original searcher.
+   * It's funny to see how this method became a monster until I realized what I've said
+   * TODO allow for code search
+   * TODO implement paging
    * */
   static async search(search: string) {
     const query = new FDADrugsQuery()
-    // todo allow for code search
     const searchWords = search.split(' ').map(encodeURIComponent)
 
     // search brand_name or active_ingredients, both including all words
@@ -41,18 +43,7 @@ export default class FDADrugsQuery {
       `products.active_ingredients.name:(${searchWords.join(' AND ')})`
     query.params.set('search', queryString)
 
-    const results = await query.request()
-    if ('error' in results) {
-      return {
-        status: 'error' as const,
-        ...results
-      }
-    }
-
-    return {
-      status: 'ok' as const,
-      drugs: results
-    }
+    return query.request()
   }
 
   toString() {
@@ -64,20 +55,27 @@ export default class FDADrugsQuery {
 
     try {
       const req = await fetch(this.toString())
-      res = await req.json()
+      res = await req.json() as FDADrugsResponse | FDAErrorResponse
     } catch (e) {
       return {
+        status: 'error' as const,
         error: {
           code: 'CUSTOM',
-          message: `No se ha podido conectar con el servidor (${(e as TypeError).message ?? undefined})`
+          message: `No se ha podido conectar con el servidor${e instanceof TypeError && ` (${e.message})`}`
         }
-      } satisfies FDAError
+      } satisfies FDAErrorResponse & { status: string }
     }
 
     if ('results' in res) {
-      return res.results as FDAApplication[]
+      return {
+        status: 'ok' as const,
+        ...res
+      }
     } else {
-      return res as FDAError
+      return {
+        status: 'error' as const,
+        ...res
+      }
     }
   }
 
