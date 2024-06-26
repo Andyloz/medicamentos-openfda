@@ -31,11 +31,12 @@ export default class FDADrugsQuery {
    * See {@link https://open.fda.gov/apis/query-syntax/ query syntax} and
    * {@link https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=faq.page#howsearch explanation of how the
    * search works}
+   * Grouping the applications by brand_name is not possible due to limitations in the API: 'sorting allowed by
+   * non-analyzed fields only'.
    * */
   static async search(search: string) {
     const query = new FDADrugsQuery()
     // todo allow for code search
-    // todo add sorting
     const searchWords = search.split(' ').map(encodeURIComponent)
 
     // search brand_name or active_ingredients, both including all words
@@ -44,64 +45,17 @@ export default class FDADrugsQuery {
       `products.active_ingredients.name:(${searchWords.join(' AND ')})`
     query.params.set('search', queryString)
 
-    const firstResults = await query.request()
-    if ('error' in firstResults) {
+    const results = await query.request()
+    if ('error' in results) {
       return {
         status: 'error' as const,
-        ...firstResults
-      }
-    }
-
-    // having all brand_names, include in the search all drugs with the same brand_name
-    const brandNames = new Set<string>()
-    for (const entry of firstResults) {
-      for (const { brand_name } of entry.products || []) {
-        brandNames.add(brand_name)
-      }
-    }
-    const queryStringIncludingRelated = queryString +
-      ` products.brand_name:(${[...brandNames.values()].map(bn => `"${bn}"`).join(' OR ')})`
-    console.log(queryStringIncludingRelated)
-    query.params.set('search', queryStringIncludingRelated)
-    const completeResults = await query.request()
-    if ('error' in completeResults) {
-      return {
-        status: 'error' as const,
-        ...completeResults
-      }
-    }
-
-    // group every occurrence by its products brand names
-    const groupedResults: FDAGroupedEntries = {}
-    for (const brandName of brandNames.values()) {
-      groupedResults[brandName] = [] // init
-    }
-    /**
-     * Some applications (entries in the jargon of this app) **could include products with different brand names** as
-     * the ones matching in the first search. These are not included as new keys at `groupedResults` nor shown in the
-     * search results (case found at ANDA076447).
-     * For the same reason, the same application **could be included into multiple groups** if it has products with
-     * similar brand names that fits together within the first search criteria (case found searching
-     * 'BUTALBITAL ACETAMINOPHEN CAFFEINE CODEINE', ANDA076528).
-     * */
-    for (const entry of completeResults) {
-      let products = entry.products ?? undefined
-      if (typeof products === 'undefined') {
-        continue
-      }
-
-      let entryBrandNames = products.map(prod => prod.brand_name)
-      entryBrandNames = [...new Set(entryBrandNames)] // remove duplicates
-      const filteredBrandNames = entryBrandNames.filter(bn => brandNames.has(bn)) // filter out-of-search brand names
-
-      for (const brandName of filteredBrandNames) {
-        groupedResults[brandName].push(entry)
+        ...results
       }
     }
 
     return {
       status: 'ok' as const,
-      drugs: groupedResults
+      drugs: results
     }
   }
 
