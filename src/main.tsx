@@ -13,6 +13,7 @@ const router = createBrowserRouter(createRoutesFromElements(
     errorElement={<IndexError />}
     loader={indexLoader}
   />
+  // todo /:application page
 ))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -1,15 +1,15 @@
-import { Box, Container, TextField } from '@mui/material'
-import Grid from '@mui/material/Unstable_Grid2'
-import hashIt from 'hash-it'
-import { Form, useLoaderData, useSubmit } from 'react-router-dom'
+import { Box, Container, TextField, Typography } from '@mui/material'
+import { Form, useLoaderData, useSearchParams, useSubmit } from 'react-router-dom'
 import { IndexLoader } from '../loaders.ts'
 import { useDebouncedCallback } from 'use-debounce'
 import { ChangeEvent } from 'react'
+import DrugsList from '../components/DrugsList.tsx'
 
 function Index() {
 
   const data = useLoaderData() as IndexLoader
   const submit = useSubmit()
+  const [searchParams] = useSearchParams()
 
   const changeHandler = useDebouncedCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -38,42 +38,22 @@ function Index() {
             aria-label='Buscar medicamentos'
             type='search'
             name='q'
+            defaultValue={searchParams.get('q')}
           />
         </Form>
 
-        {/* results count */}
-        {'drugs' in data &&
-          <Typography
-            variant='body2'
-            sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}
-          >
-            Se han encontrado {data.drugs.length} resultados
-          </Typography>
-        }
+        {/* message */}
+        <Typography
+          variant='body2'
+          sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}
+        >
+          {/* todo update to a not limited counter */}
+          {data.status === 'ok' && <>Se han encontrado {Object.entries(data.drugs).length} resultados</>}
+          {data.status === 'error' && <>{data.message}</>}
+        </Typography>
 
         {/* results display */}
-        {error !== undefined &&
-          <Typography
-            variant='body2'
-            sx={{ textAlign: 'center', color: 'text.secondary' }}
-            children={error}
-          />
-        }
-        {error === undefined &&
-          <Grid container spacing={2}>
-            {drugEntries.map(drug =>
-              <Grid key={hashIt(drug)} xs={12}>
-                <Card variant='outlined'>
-                  <CardContent>
-                    <pre style={{ fontSize: '.5rem' }}>
-                      {JSON.stringify(drug, null, 2)}
-                    </pre>
-                  </CardContent>
-                </Card>
-              </Grid>
-            )}
-          </Grid>
-        }
+        {data.status === 'ok' && <DrugsList applications={data.drugs} />}
 
       </Box>
     </Container>
