@@ -1,11 +1,23 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import CssBaseline from '@mui/material/CssBaseline';
+import Index from './pages/Index.tsx'
+import CssBaseline from '@mui/material/CssBaseline'
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
+import IndexError from './pages/IndexError.tsx'
+
+const router = createBrowserRouter(createRoutesFromElements(
+
+  <Route
+    path='/'
+    element={<Index />}
+    errorElement={<IndexError />}
+  />
+  
+))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <CssBaseline />
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>,
 )

@@ -1,14 +1,14 @@
 import { Box, Card, CardContent, Container, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import FDADrugsQuery, { FDADrugsQueryResult } from './api/FDADrugsQuery.ts'
+import FDADrugsQuery, { FDADrugsQueryResult } from '../api/FDADrugsQuery.ts'
 import useAsyncEffect from 'use-async-effect'
 import Grid from '@mui/material/Unstable_Grid2'
 import hashIt from 'hash-it'
 
 export type DrugSearchEntries = ReturnType<typeof Object.entries<FDADrugsQueryResult>>
 
-function App() {
+function Index() {
   // todo move search state to the url
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebounce(search, 500)
@@ -100,4 +100,4 @@ function App() {
   )
 }
 
-export default App
+export default Index
