@@ -1,7 +1,8 @@
 import { FDADrugsResponse, FDAErrorResponse } from './FDADrugs.ts'
+import invariant from 'tiny-invariant'
 
-const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
-const QUERY_LIMIT = 50
+export const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
+export const QUERY_LIMIT = 50
 
 /**
  * Used for ease a bit the building of queries
@@ -29,11 +30,12 @@ export default class FDADrugsQuery {
    * search works}
    * Grouping the applications by brand_name is not possible due to limitations in the API, so it's not possible to
    * fully mimic the original searcher.
-   * It's funny to see how this method became a monster until I realized what I've said
-   * TODO allow for code search
-   * TODO implement paging
+   * It's funny to see how this method became a monster until I realized what I've said.
+   * @param search Text to be search into applications `products.brand_name` and `products.active_ingredients.name`
+   * @param [page=1] Allows for pagination. Starts at 1.
    * */
-  static async search(search: string) {
+  static async search(search: string, page: number = 1) {
+    // TODO allow for code search
     const query = new FDADrugsQuery()
     const searchWords = search.split(' ').map(encodeURIComponent)
 
@@ -43,7 +45,21 @@ export default class FDADrugsQuery {
       `products.active_ingredients.name:(${searchWords.join(' AND ')})`
     query.params.set('search', queryString)
 
-    return query.request()
+    // paging
+    invariant(page > 0, `Pages starts at 1. Provided: ${page}`)
+    query.params.set('skip', `${(page - 1) * QUERY_LIMIT}`)
+
+    const result = await query.request()
+    if (result.status === 'error') return result
+
+    return {
+      ...result,
+      // pagination
+      pagination: {
+        totalPages: Math.ceil(result.meta.results.total / result.meta.results.limit),
+        currentPage: Math.ceil((result.meta.results.skip + 1) / result.meta.results.limit)
+      }
+    }
   }
 
   toString() {

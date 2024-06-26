@@ -5,12 +5,13 @@ export const indexLoader = (async ({ request }) => {
 
   const url = new URL(request.url)
   const q = url.searchParams.get('q')
+  const page = url.searchParams.get('page') ?? 0 as const
 
   if (typeof q === 'object' || q.length < 3) {
     return { status: 'no-search' as const }
   }
 
-  const results = await FDADrugsQuery.search(q)
+  const results = await FDADrugsQuery.search(q, Number(page))
 
   if (results.status === 'error') {
     return {
@@ -21,6 +22,7 @@ export const indexLoader = (async ({ request }) => {
     }
   }
   return results
+
 }) satisfies LoaderFunction
 
 export type IndexLoader = Awaited<ReturnType<typeof indexLoader>>
