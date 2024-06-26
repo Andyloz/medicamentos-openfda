@@ -1,10 +1,10 @@
 // noinspection SpellCheckingInspection
 
-export interface FdaDrugEntry {
+export interface FDAApplication {
   submissions?: Submission[]
   application_number: string
   sponsor_name: string
-  products?: Product[]
+  products: Product[] // assumed present in this app
   openfda?: Openfda
 }
 

@@ -1,11 +1,7 @@
-import { FdaDrugEntry, FDAError } from './FDADrugs.ts'
+import { FDAApplication, FDAError } from './FDADrugs.ts'
 
 const DRUGS_URL = 'https://api.fda.gov/drug/drugsfda.json'
 const QUERY_LIMIT = 50
-
-export type FDADrugsQueryResult = Awaited<ReturnType<typeof FDADrugsQuery.search>>
-
-export type FDAGroupedEntries = { [brandName: string]: FdaDrugEntry[] }
 
 /**
  * Used for ease a bit the building of queries
@@ -79,7 +75,7 @@ export default class FDADrugsQuery {
     }
 
     if ('results' in res) {
-      return res.results as FdaDrugEntry[]
+      return res.results as FDAApplication[]
     } else {
       return res as FDAError
     }
